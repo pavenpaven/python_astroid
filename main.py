@@ -28,6 +28,7 @@ def graphics():
     render_astroid()
     player_render()
     render_shot()
+    render_collectables()
     pygame.display.update()
 
 #
@@ -169,6 +170,20 @@ def shot_collition():
         n1 = 0
         n += 1
 
+def collectable_collition(player_hitbox, col_num):
+    n=0
+    for i in collectables:
+        if check_if_collide(player_hitbox, ((i.pos), (i.pos[0] + col_size, i.pos[1] + col_size))) == "dead":
+            col_num+=1
+            collectables.pop(n)
+            spawn_collectable()
+        n+=1
+    return col_num
+
+
+
+
+
 # Extra
 spam = 20
 
@@ -206,18 +221,23 @@ col_size = 10
 
 collectables = []
 
+def render_collectables():
+    for i in collectables:
+        i.render()
+
 def random_pos(width, hight):
     return (random.randint(0, width), random.randint(0, hight))
 
 class Collectable:
-    def __init__(self, x, y):
-        self.pos = (x, y)
+    def __init__(self, pos):
+        print(pos)
+        self.pos = pos
     def render(self):
         pygame.draw.rect(window, (255, 0, 255), (self.pos[0], self.pos[1], col_size, col_size ))
 
 def spawn_collectable():
     x = Collectable(random_pos(screen_size[0] * tile, screen_size[1] * tile ))
-    collactable.append(x)
+    collectables.append(x)
 
 
 #screens
@@ -231,12 +251,13 @@ def game_over():
 diff = 500
 
 def main_loop():
+    col_num = 0
     j = False
     clock = pygame.time.Clock()
     framecount=0
     for i in range(1):
         spawn_astroid()
-        #spawn_collectable()
+        spawn_collectable()
     game = True
     astro=3
     chance=1000
@@ -250,6 +271,7 @@ def main_loop():
         player_hitbox = ((jack.x - 30, jack.y - 30), (jack.x + 30, jack.y + 30))
         game = player_collition(player_hitbox)
         shot_collition()
+        col_num =collectable_collition(player_hitbox, col_num)
         if framecount/chance == round(framecount/chance):
             spawn_astroid()
         if framecount/diff == round(framecount/diff):
