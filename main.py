@@ -74,9 +74,6 @@ def spawn_astroid():
     astroids.append([x, y, vol])
 
 #key presses
-#class Collectable:
-#  def __init__(self, x, y):
-#     
 
 class Player:
     def __init__(self, x, y, vol, angle):
@@ -93,7 +90,7 @@ def check_keys(framecount, j):
   #if framecount/2==round(framecount/2):
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
-        tut=False
+        pygame.quit()
     keys = pygame.key.get_pressed()
     pygame.key.set_repeat(1, 100000000)
         
@@ -199,9 +196,29 @@ def render_shot():
       y += vec[1] * speed_of_bullet
       shots[i][0] = x
       shots[i][1] = y
-      i += 1
+      i +=1
 
       pygame.draw.rect(window, (255, 0, 0), (x, y, bullet_size, bullet_size))
+
+#collecatble
+
+col_size = 10
+
+collectables = []
+
+def random_pos(width, hight):
+    return (random.randint(0, width), random.randint(0, hight))
+
+class Collectable:
+    def __init__(self, x, y):
+        self.pos = (x, y)
+    def render(self):
+        pygame.draw.rect(window, (255, 0, 255), (self.pos[0], self.pos[1], col_size, col_size ))
+
+def spawn_collectable():
+    x = Collectable(random_pos(screen_size[0] * tile, screen_size[1] * tile ))
+    collactable.append(x)
+
 
 #screens
 
@@ -219,6 +236,7 @@ def main_loop():
     framecount=0
     for i in range(1):
         spawn_astroid()
+        #spawn_collectable()
     game = True
     astro=3
     chance=1000
@@ -241,11 +259,3 @@ def main_loop():
 while True:
   main_loop()
   game_over()
-
-
-
-
-a=100
-while a>1:
-  print("tut")
-  a=a-1
