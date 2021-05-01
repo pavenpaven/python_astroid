@@ -230,7 +230,6 @@ def random_pos(width, hight):
 
 class Collectable:
     def __init__(self, pos):
-        print(pos)
         self.pos = pos
     def render(self):
         pygame.draw.rect(window, (255, 0, 255), (self.pos[0], self.pos[1], col_size, col_size ))
@@ -243,9 +242,7 @@ def spawn_collectable():
 #screens
 
 def game_over():
-    while True:
-        window.fill((0, 0, 0))
-        pygame.l
+        pygame.quit()
 
 #main loop
 diff = 500
@@ -267,7 +264,6 @@ def main_loop():
         j=check_keys(framecount, j)
         move_player()
         graphics()
-        #print(clock.get_fps())
         player_hitbox = ((jack.x - 30, jack.y - 30), (jack.x + 30, jack.y + 30))
         game = player_collition(player_hitbox)
         shot_collition()
@@ -276,8 +272,9 @@ def main_loop():
             spawn_astroid()
         if framecount/diff == round(framecount/diff):
           chance = round(chance/ 1.25)
-        
+        if framecount/600 == round(framecount/600):
+            print(clock.get_fps())
+    print("Your score was:", col_num)
 
-while True:
-  main_loop()
-  game_over()
+main_loop()
+game_over()
