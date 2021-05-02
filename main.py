@@ -87,7 +87,7 @@ class Player:
 jack = Player(screen_size[0] * tile / 2, screen_size[1] * tile / 2 , (0, 0), 0)
 
 
-def check_keys(framecount, j):
+def check_keys(framecount, j, spam):
   #if framecount/2==round(framecount/2):
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
@@ -170,11 +170,11 @@ def shot_collition():
         n1 = 0
         n += 1
 
-def collectable_collition(player_hitbox):
+def collectable_collition(player_hitbox, framecount):
     n=0
     for i in collectables:
         if check_if_collide(player_hitbox, ((i.pos), (i.pos[0] + col_size, i.pos[1] + col_size))) == "dead":
-            i.if_collected()
+            i.if_collected(framecount)
             collectables.pop(n)
             if i.__class__ == Collectable:
                 spawn_collectable()
@@ -208,6 +208,9 @@ def render_shot():
       y += vec[1] * speed_of_bullet
       shots[i][0] = x
       shots[i][1] = y
+      if x < 0 or y < 0 or x > tile*screen_size[0] or y > tile*screen_size[1]:
+          shots.pop(i)
+        
       i +=1
 
       pygame.draw.rect(window, (255, 0, 0), (x, y, bullet_size, bullet_size))
@@ -231,7 +234,7 @@ class Collectable:
         self.pos = pos
     def render(self):
         pygame.draw.rect(window, (255, 0, 255), (self.pos[0], self.pos[1], col_size, col_size))
-    def if_collected(self):
+    def if_collected(self, framecount):
         self.__class__.col_num += 1 #is deleted outside the function
 
 
@@ -241,15 +244,22 @@ def spawn_collectable():
 
 #powerup
 
+spawn_freq = 1200 #in frames
+
 pow_size = col_size # Powerup size equals size of collectable 
 
+powerup_length = 300 #in frames
+
+powerup_shooting = 5 #changes spam when in powerup state
+
 class Powerup:
+    last_collected = powerup_length * -1
     def __init__(self, pos):
         self.pos = pos
     def render(self):
         pygame.draw.rect(window, (0, 0, 255), (self.pos[0], self.pos[1], pow_size, pow_size))
-    def if_collected(self):
-        print("powerup!!!")
+    def if_collected(self, framecount):
+        self.__class__.last_collected = framecount
 
 def spawn_powerup():
     x = Powerup(random_pos(screen_size[0] * tile - 10, screen_size[1] * tile - 10 ))
@@ -267,9 +277,10 @@ def game_over():
 diff = 500
 
 def main_loop():
+    spamu = spam
     j = False
     clock = pygame.time.Clock()
-    framecount=0
+    framecount = 0
     for i in range(1):
         spawn_astroid()
         spawn_collectable()
@@ -280,13 +291,20 @@ def main_loop():
     while game:
         clock.tick(60)
         framecount+=1
-        j=check_keys(framecount, j)
+        j=check_keys(framecount, j, spamu)
         move_player()
         graphics()
         player_hitbox = ((jack.x - 30, jack.y - 30), (jack.x + 30, jack.y + 30))
         game = player_collition(player_hitbox)
         shot_collition()
-        collectable_collition(player_hitbox)
+        collectable_collition(player_hitbox, framecount)
+        if Powerup.last_collected + powerup_length  > framecount:
+            spamu = powerup_shooting
+        else:
+            spamu = spam
+        if Powerup.last_collected + spawn_freq < framecount:
+            if len(collectables) == 1:
+                spawn_powerup()
         if framecount/chance == round(framecount/chance):
             spawn_astroid()
         if framecount/diff == round(framecount/diff):
