@@ -5,7 +5,7 @@ import random
 #
 
 #graphics
-tile = 250
+tile = 300
 
 screen_size = (3, 2)
 
@@ -97,9 +97,9 @@ def check_keys(framecount, j):
         
 
     if keys[pygame.K_a] or keys[pygame.K_LEFT]:
-      jack.angle+=0.05/speed
+      jack.angle+=0.08/speed
     if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
-      jack.angle-=0.05/speed
+      jack.angle-=0.08/speed
     if keys[pygame.K_w]:
         calculate_vol(0.05,framecount)
     if keys[pygame.K_s]:
@@ -170,18 +170,15 @@ def shot_collition():
         n1 = 0
         n += 1
 
-def collectable_collition(player_hitbox, col_num):
+def collectable_collition(player_hitbox):
     n=0
     for i in collectables:
         if check_if_collide(player_hitbox, ((i.pos), (i.pos[0] + col_size, i.pos[1] + col_size))) == "dead":
-            col_num+=1
+            i.if_collected()
             collectables.pop(n)
-            spawn_collectable()
+            if i.__class__ == Collectable:
+                spawn_collectable()
         n+=1
-    return col_num
-
-
-
 
 
 # Extra
@@ -219,42 +216,64 @@ def render_shot():
 
 col_size = 10
 
-collectables = []
+collectables = [] # is not only for Collectable its also for Powerup
 
 def render_collectables():
     for i in collectables:
         i.render()
 
 def random_pos(width, hight):
-    return (random.randint(0, width), random.randint(0, hight))
+    return (random.randint(10, width), random.randint(10, hight))
 
 class Collectable:
+    col_num = 0
     def __init__(self, pos):
         self.pos = pos
     def render(self):
-        pygame.draw.rect(window, (255, 0, 255), (self.pos[0], self.pos[1], col_size, col_size ))
+        pygame.draw.rect(window, (255, 0, 255), (self.pos[0], self.pos[1], col_size, col_size))
+    def if_collected(self):
+        self.__class__.col_num += 1 #is deleted outside the function
+
 
 def spawn_collectable():
-    x = Collectable(random_pos(screen_size[0] * tile, screen_size[1] * tile ))
+    x = Collectable(random_pos(screen_size[0] * tile - 10, screen_size[1] * tile - 10 ))
     collectables.append(x)
+
+#powerup
+
+pow_size = col_size # Powerup size equals size of collectable 
+
+class Powerup:
+    def __init__(self, pos):
+        self.pos = pos
+    def render(self):
+        pygame.draw.rect(window, (0, 0, 255), (self.pos[0], self.pos[1], pow_size, pow_size))
+    def if_collected(self):
+        print("powerup!!!")
+
+def spawn_powerup():
+    x = Powerup(random_pos(screen_size[0] * tile - 10, screen_size[1] * tile - 10 ))
+    collectables.append(x)
+
 
 
 #screens
 
 def game_over():
+        print("Your score was:", Collectable.col_num)
         pygame.quit()
 
 #main loop
 diff = 500
 
 def main_loop():
-    col_num = 0
     j = False
     clock = pygame.time.Clock()
     framecount=0
     for i in range(1):
         spawn_astroid()
         spawn_collectable()
+        spawn_powerup()
     game = True
     astro=3
     chance=1000
@@ -267,14 +286,13 @@ def main_loop():
         player_hitbox = ((jack.x - 30, jack.y - 30), (jack.x + 30, jack.y + 30))
         game = player_collition(player_hitbox)
         shot_collition()
-        col_num =collectable_collition(player_hitbox, col_num)
+        collectable_collition(player_hitbox)
         if framecount/chance == round(framecount/chance):
             spawn_astroid()
         if framecount/diff == round(framecount/diff):
           chance = round(chance/ 1.25)
         if framecount/600 == round(framecount/600):
             print(clock.get_fps())
-    print("Your score was:", col_num)
 
 main_loop()
 game_over()
