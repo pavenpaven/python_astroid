@@ -100,9 +100,9 @@ def check_keys(framecount, j, spam):
       jack.angle+=0.08/speed
     if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
       jack.angle-=0.08/speed
-    if keys[pygame.K_w]:
+    if keys[pygame.K_w] or keys[pygame.K_UP]:
         calculate_vol(0.05,framecount)
-    if keys[pygame.K_s]:
+    if keys[pygame.K_s] or keys[pygame.K_DOWN]:
       jack.vol=(jack.vol[0]/1.02, jack.vol[1]/1.02)
     if keys[pygame.K_SPACE] and j == True:
         spawn_shot()
