@@ -1,0 +1,2 @@
+filename = aaaaa.jpeg
+amount_of_life = 1

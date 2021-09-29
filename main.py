@@ -1,8 +1,27 @@
+#what is even interlectual property 
+
+
 import pygame
 import math
 import random
 
-#
+#conf file
+# im going to define some globals, i know ii but my code is too messed up.
+conf_globals = []
+
+conf_file = open("conf.txt", "r")
+conf=conf_file.read()
+conf = conf.split("\n") #oops
+for i in conf:
+    x = i.split(" = ") #yes i know but i seriusly cant have not spaces
+    conf_globals.append(x) #note that i never int so they can be strings
+conf_file.close()
+
+def conf_search(name): #just gets the data asosiated with a name in the conf_global list
+    for i in conf_globals:
+        if name == i[0]:
+            return i[1]
+    a # this is stupid i want to crash the program and forgot how to throw an exeption or something no weit not that 
 
 #graphics
 tile = 300
@@ -13,6 +32,23 @@ player_size = 30
 
 window=pygame.display.set_mode((screen_size[0]*tile, screen_size[1]*tile))
 
+class Entity:
+    entity_render_list = []
+    def __init__(self, hit_box, render):
+            self.hit_box = hit_box
+            self.__render__ = render #render is a function that takes in an hitbox and renders the object
+            __class__.entity_render_list.append(self)
+    def render_entity(self):
+       self.__render__(self.hit_box)
+
+class Rect_entity:
+    def __init__(self, hit_box, color):
+        self.entity = Entity(hit_box)
+        Entity.entity_render_list.append(self)
+
+
+
+
 def player_render():
   x=(math.sin(jack.angle-0.25)*player_size+jack.x, math.cos(jack.angle-0.25)*player_size+jack.y)
 
@@ -22,6 +58,9 @@ def player_render():
 
   pygame.draw.polygon(window, (255, 255, 255), (z, x, y))
 
+jacki=pygame.Surface((10,10))
+imag = pygame.image.load(conf_search("filename"))
+imag = pygame.transform.scale(imag, (50, 50))
 
 def graphics():
     window.fill((0, 0, 0))
@@ -52,6 +91,7 @@ def render_astroid():
          
         pygame.draw.rect(window, (0, 255, 0), (pos[0], pos[1], astroid_hitbox, astroid_hitbox))
         k += 1
+        window.blit(imag, (x, y))
 
 def spawn_astroid():
     cous=random.randint(0,3)
@@ -77,15 +117,16 @@ def spawn_astroid():
 #key presses
 
 class Player:
-    def __init__(self, x, y, vol, angle):
+    def __init__(self, x, y, vol, angle, health):
         self.x = x
         self.y = y
         self.vol = vol
         self.angle = angle
+        self.health = health
 
 
-jack = Player(screen_size[0] * tile / 2, screen_size[1] * tile / 2 , (0, 0), 0)
-
+jack = Player(screen_size[0] * tile / 2, screen_size[1] * tile / 2 , (0, 0), 0, int(conf_search("amount_of_life")))
+print(jack.x, jack.y)
 
 def check_keys(framecount, j, spam):
   #if framecount/2==round(framecount/2):
@@ -145,17 +186,21 @@ def move_player():
 
     
 # colliction
+invisibility_duration = 60 # duration after taking damage in frames
+# and idk how to spell invisibility but i think im at least consistent
+
 
 def check_if_collide(hitbox1, hitbox2):
      for i in hitbox2:
        if i[0] > hitbox1[0][0] and i[0]<hitbox1[1][0]:
          if i[1] > hitbox1[0][1] and i[1] < hitbox1[1][1]:
-           return "dead"
+           return "dead" #for some reason it returns "dead" I guess you could check an if and the "dead" would reaturn true but idk orkar change it so I write this comment insted
 
-def player_collition(player_hitbox):
-    for i in astroids:
-         if check_if_collide(player_hitbox,((i[0], i[1]), (i[0] + astroid_hitbox, i[1] + astroid_hitbox))) == "dead":
-              return False
+def player_collition(player_hitbox, invis, frame_count): # invis is the frame you last got invisibility
+    if invis < frame_count - invisibility_duration:
+        for i in astroids:
+             if check_if_collide(player_hitbox,((i[0], i[1]), (i[0] + astroid_hitbox, i[1] + astroid_hitbox))) == "dead":
+                  return False
     return True
 
 def shot_collition():
@@ -246,11 +291,11 @@ def spawn_collectable():
 
 spawn_freq = 1200 #in frames
 
-pow_size = col_size # Powerup size equals size of collectable 
+pow_size = col_size # Powerup size equals size in pixels of collectable 
 
-powerup_length = 300 #in frames
+powerup_length = 300 #in frames (60 fps)
 
-powerup_shooting = 5 #changes spam when in powerup state
+powerup_shooting = 5 #changes spam (rate of fire) when in powerup state
 
 class Powerup:
     last_collected = powerup_length * -1
@@ -265,6 +310,17 @@ def spawn_powerup():
     x = Powerup(random_pos(screen_size[0] * tile - 10, screen_size[1] * tile - 10 ))
     collectables.append(x)
 
+#health bar
+HEALTH_BAR_Y_OFSET = 20 # how many pixels the origin of the health bar from the top
+HEALTH_BAR_X_OFSET = 10 # same as y ofset but for x
+HEALTH_BAR_WIDTH = 10 # y width of health bar pixels
+HEALTH_BAR_LENGTH = tile * screen_size[1] - 20  #x leangth of the health bar
+  
+class Health_bar:
+    def __init__(self, x, y, length, width, health ): # check konstants
+        self.__edge_pos__ = ((x, y) , (x + length, y+ width))  #bounds of the healthbar
+    def render(self):
+        return 0
 
 
 #screens
@@ -288,6 +344,7 @@ def main_loop():
     game = True
     astro=3
     chance=1000
+    invisibility_frame = 0 # the frame when you last got invicibility from taking damage
     while game:
         clock.tick(60)
         framecount+=1
@@ -295,7 +352,12 @@ def main_loop():
         move_player()
         graphics()
         player_hitbox = ((jack.x - 30, jack.y - 30), (jack.x + 30, jack.y + 30))
-        game = player_collition(player_hitbox)
+        # need to split this in to multipule functions
+        if not player_collition(player_hitbox, invisibility_frame, framecount):#fuck for some reason i spelld frame count with framecount when i should have done frame_count wich i do inside the function it would be an esy fix but idk.
+            jack.health -= 1
+            invisibility_frame = framecount
+        if jack.health <= 0:
+            game = False
         shot_collition()
         collectable_collition(player_hitbox, framecount)
         if Powerup.last_collected + powerup_length  > framecount:
@@ -314,3 +376,6 @@ def main_loop():
 
 main_loop()
 game_over()
+
+
+#i mean im pretty good at comenting but i just work with an old and shit project that i didnt know what to do with 
