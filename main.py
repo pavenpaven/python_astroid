@@ -59,7 +59,7 @@ def player_render():
   pygame.draw.polygon(window, (255, 255, 255), (z, x, y))
 
 jacki=pygame.Surface((10,10))
-imag = pygame.image.load(conf_search("filename"))
+imag = pygame.image.load(conf_search("astroid_filename"))
 imag = pygame.transform.scale(imag, (50, 50))
 
 def graphics():
@@ -74,7 +74,7 @@ def graphics():
 
 #astrodise
 
-astroid_hitbox = 50
+astroid_hitbox = float(conf_search("astroid_size"))
 
 astroids = []
 
@@ -125,7 +125,7 @@ class Player:
         self.health = health
 
 
-jack = Player(screen_size[0] * tile / 2, screen_size[1] * tile / 2 , (0, 0), 0, int(conf_search("amount_of_life")))
+jack = Player(screen_size[0] * tile / 2, screen_size[1] * tile / 2 , (0, 0), 0, float(conf_search("amount_of_life")))
 print(jack.x, jack.y)
 
 def check_keys(framecount, j, spam):
@@ -227,14 +227,14 @@ def collectable_collition(player_hitbox, framecount):
 
 
 # Extra
-spam = 20
+spam = float(conf_search("bullet_spam"))
 
 
 shots = []
 
-speed_of_bullet = 5
+speed_of_bullet = float(conf_search("bullet_speed"))
 
-bullet_size = 6
+bullet_size = float(conf_search("bullet_size"))
 
 
 def spawn_shot():
