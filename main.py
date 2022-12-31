@@ -4,6 +4,7 @@
 import pygame
 import math
 import random
+import mine
 
 #conf file
 # im going to define some globals, i know ii but my code is too messed up.
@@ -61,13 +62,19 @@ def player_render():
 jacki=pygame.Surface((10,10))
 imag = pygame.image.load(conf_search("astroid_filename"))
 imag = pygame.transform.scale(imag, (50, 50))
+pygame.font.init()
+Font = pygame.font.SysFont("roboto", 50)
 
-def graphics():
+def graphics(time_surface):
     window.fill((0, 0, 0))
     render_astroid()
     player_render()
     render_shot()
     render_collectables()
+    window.blit(time_surface, (10,60))
+    for i in mine.Mine.mines:
+        i.render(window)
+    window.blit(Font.render(str(Collectable.col_num), True, (255,255,255)), (5,5))
     pygame.display.update()
 
 #
@@ -143,10 +150,13 @@ def check_keys(framecount, j, spam):
       jack.angle-=0.08/speed
     if keys[pygame.K_w] or keys[pygame.K_UP]:
         calculate_vol(0.05,framecount)
-    if keys[pygame.K_s] or keys[pygame.K_DOWN]:
+    if keys[pygame.K_z] or keys[pygame.K_DOWN]:
       jack.vol=(jack.vol[0]/1.02, jack.vol[1]/1.02)
-    if keys[pygame.K_SPACE] and j == True:
+    if keys[pygame.K_x] and j == True:
         spawn_shot()
+        j=False
+    if keys[pygame.K_c] and j:
+        mine.Mine((jack.x, jack.y))
         j=False
     if framecount/spam == round(framecount/spam):
         j=True
@@ -201,6 +211,9 @@ def player_collition(player_hitbox, invis, frame_count): # invis is the frame yo
         for i in astroids:
              if check_if_collide(player_hitbox,((i[0], i[1]), (i[0] + astroid_hitbox, i[1] + astroid_hitbox))) == "dead":
                   return False
+        for i in mine.Mine.mines:
+            if i.collide_player(player_hitbox):
+                return False
     return True
 
 def shot_collition():
@@ -215,6 +228,8 @@ def shot_collition():
         n1 = 0
         n += 1
 
+automatic_mines = conf_search("automatic_mines") == "True"
+
 def collectable_collition(player_hitbox, framecount):
     n=0
     for i in collectables:
@@ -223,6 +238,8 @@ def collectable_collition(player_hitbox, framecount):
             collectables.pop(n)
             if i.__class__ == Collectable:
                 spawn_collectable()
+                if automatic_mines:
+                    mine.Mine((jack.x, jack.y))
         n+=1
 
 
@@ -332,6 +349,8 @@ def game_over():
 #main loop
 diff = 500
 
+pygame.mixer.init()
+
 def main_loop():
     spamu = spam
     j = False
@@ -345,20 +364,28 @@ def main_loop():
     astro=3
     chance=1000
     invisibility_frame = 0 # the frame when you last got invicibility from taking damage
+    time = 0
+    time_surface = Font.render(str(time), True, (255,255,255))
     while game:
         clock.tick(60)
         framecount+=1
         j=check_keys(framecount, j, spamu)
         move_player()
-        graphics()
+        graphics(time_surface)
         player_hitbox = ((jack.x - 30, jack.y - 30), (jack.x + 30, jack.y + 30))
         # need to split this in to multipule functions
+        if framecount % 60 == 0:
+            time += 1
+            time_surface = Font.render(str(time), True, (255,255,255))
         if not player_collition(player_hitbox, invisibility_frame, framecount):#fuck for some reason i spelld frame count with framecount when i should have done frame_count wich i do inside the function it would be an esy fix but idk.
             jack.health -= 1
             invisibility_frame = framecount
         if jack.health <= 0:
             game = False
         shot_collition()
+        for n,i in enumerate(mine.Mine.mines):
+            if i.check_astroids(astroids):
+                mine.Mine.mines.pop(n)
         collectable_collition(player_hitbox, framecount)
         if Powerup.last_collected + powerup_length  > framecount:
             spamu = powerup_shooting
