@@ -1,6 +1,9 @@
 astroid_filename = aaaaa.jpeg
 astroid_size = 50
 amount_of_life = 1
-bullet_spam = 20
+bullet_spam = 60
 bullet_speed = 5
 bullet_size = 6
+mine_color = 200,70,0
+mine_size = 10
+automatic_mines = False
