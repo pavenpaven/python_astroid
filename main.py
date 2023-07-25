@@ -24,6 +24,15 @@ def conf_search(name): #just gets the data asosiated with a name in the conf_glo
             return i[1]
     a # this is stupid i want to crash the program and forgot how to throw an exeption or something no weit not that 
 
+def read_highscore() -> int:
+    with open("highscore", "r") as fil:
+        txt = fil.read()
+    return int(txt)
+
+def write_highscore(n: int) -> None:
+    with open("highscore", "w") as fil:
+        fil.write(str(n))
+
 #graphics
 tile = 300
 
@@ -344,6 +353,11 @@ class Health_bar:
 
 def game_over():
         print("Your score was:", Collectable.col_num)
+        if Collectable.col_num > read_highscore():
+            print("New highscore!!")
+            write_highscore(Collectable.col_num)
+        else:
+            print(f"Your highscore is {read_highscore()}")
         pygame.quit()
 
 #main loop
